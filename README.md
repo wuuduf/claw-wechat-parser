@@ -28,6 +28,28 @@
 
 > 注意：完整平台解析器会在后续阶段从 `astrbot_plugin_parser` 迁移；当前 B 站/通用链接用于验证微信端到端链路。
 
+## Docker Compose 快速部署
+
+推荐 VPS 使用 Docker Compose：
+
+```bash
+cd /opt
+git clone https://github.com/wuuduf/claw-wechat-parser.git
+cd /opt/claw-wechat-parser
+cp .env.example .env
+docker compose build
+docker compose run --rm claw-parser login-wechat
+docker compose up -d
+```
+
+查看日志：
+
+```bash
+docker compose logs -f
+```
+
+详细说明见 [`docs/DOCKER.md`](docs/DOCKER.md)。
+
 ## 安装
 
 ```bash
@@ -162,7 +184,7 @@ flowchart TD
 
 - [ ] SQLite 状态库
 - [ ] 多账号并发
-- [ ] Docker 镜像
+- [x] Docker Compose 部署
 - [ ] systemd unit
 - [ ] Web 管理面板
 - [ ] 限速/配额/缓存 LRU

@@ -12,6 +12,7 @@ build/
 
 # Runtime state
 .state/
+data/
 cache/
 *.log
 *.sqlite3
