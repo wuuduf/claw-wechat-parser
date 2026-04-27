@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claw-wechat-parser"
+version = "0.1.0"
+description = "WeChat Claw/iLink link parser bot with QR login and media delivery"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "claw-wechat-parser contributors" }]
+dependencies = [
+  "aiofiles>=24.1.0",
+  "httpx>=0.27.0,<1.0.0",
+  "typer>=0.12.0,<1.0.0",
+  "rich>=13.7.0,<15.0.0",
+  "qrcode[pil]>=7.4.2,<9.0.0",
+  "pillow>=10.0.0,<13.0.0",
+  "cryptography>=42.0.0,<47.0.0",
+  "curl_cffi>=0.13.0,<1.0.0,!=0.14.0",
+  "msgspec>=0.20.0,<1.0.0",
+  "bilibili-api-python>=17.4.1,<18.0.0",
+  "beautifulsoup4>=4.12.0,<5.0.0",
+  "gallery-dl>=1.31.2",
+  "yt-dlp>=2025.1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0,<10.0.0",
+  "pytest-asyncio>=0.23.0,<2.0.0",
+  "ruff>=0.8.0,<1.0.0",
+  "mypy>=1.10.0,<2.0.0",
+]
+
+[project.scripts]
+claw-parser = "claw_wechat_parser.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claw_wechat_parser"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
