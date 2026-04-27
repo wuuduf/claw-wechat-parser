@@ -198,6 +198,8 @@ flowchart TD
 | `CLAW_PARSER_CDN_BASE_URL` | `https://novac2c.cdn.weixin.qq.com/c2c` | 微信 CDN 地址 |
 | `CLAW_PARSER_ILINK_BOT_TYPE` | `3` | 二维码 bot_type |
 | `CLAW_PARSER_MAX_MEDIA_SIZE_MB` | `80` | 单媒体大小限制 |
+| `CLAW_PARSER_CDN_UPLOAD_TIMEOUT_S` | `180` | 微信 CDN 单次上传超时 |
+| `CLAW_PARSER_CDN_UPLOAD_RETRIES` | `3` | 微信 CDN 上传失败重试次数 |
 | `CLAW_PARSER_DEBOUNCE_SECONDS` | `300` | 防抖窗口 |
 | `CLAW_PARSER_BILIBILI_COOKIE` | 空 | Bilibili Cookie，用于高画质/AI 总结等登录能力 |
 | `CLAW_PARSER_BILIBILI_VIDEO_QUALITY` | `_720P` | Bilibili 下载清晰度 |

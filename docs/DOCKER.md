@@ -38,6 +38,8 @@ PUID=0
 PGID=0
 CLAW_PARSER_MAX_MEDIA_SIZE_MB=60
 CLAW_PARSER_MAX_MEDIA_DURATION_S=600
+CLAW_PARSER_CDN_UPLOAD_TIMEOUT_S=180
+CLAW_PARSER_CDN_UPLOAD_RETRIES=3
 CLAW_PARSER_CACHE_MAX_GB=4
 ```
 
@@ -119,6 +121,21 @@ docker compose run --rm claw-parser login-wechat
 
 - 本项目不需要开放端口。
 - `./data` 目录包含微信 token 和平台 cookie，注意备份和权限。
+- 如果磁盘紧张，可以删除缓存：
+- 如果大视频下载成功但 CDN 上传报 `ReadError`，可以临时调大上传超时或降低单媒体大小限制：
+
+```env
+CLAW_PARSER_MAX_MEDIA_SIZE_MB=40
+CLAW_PARSER_CDN_UPLOAD_TIMEOUT_S=300
+CLAW_PARSER_CDN_UPLOAD_RETRIES=5
+```
+
+- 重启后生效：
+
+```bash
+docker compose up -d --build
+```
+
 - 如果磁盘紧张，可以删除缓存：
 
 ```bash

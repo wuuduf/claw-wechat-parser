@@ -25,6 +25,8 @@ class Settings:
     api_timeout_s: float = float(os.environ.get("CLAW_PARSER_API_TIMEOUT_S", "15"))
     long_poll_timeout_s: float = float(os.environ.get("CLAW_PARSER_LONG_POLL_TIMEOUT_S", "35"))
     login_timeout_s: float = float(os.environ.get("CLAW_PARSER_LOGIN_TIMEOUT_S", "480"))
+    cdn_upload_timeout_s: float = float(os.environ.get("CLAW_PARSER_CDN_UPLOAD_TIMEOUT_S", "180"))
+    cdn_upload_retries: int = int(os.environ.get("CLAW_PARSER_CDN_UPLOAD_RETRIES", "3"))
     max_media_size_mb: int = int(os.environ.get("CLAW_PARSER_MAX_MEDIA_SIZE_MB", "80"))
     max_media_duration_s: int = int(os.environ.get("CLAW_PARSER_MAX_MEDIA_DURATION_S", "900"))
     max_concurrent_downloads: int = int(os.environ.get("CLAW_PARSER_MAX_CONCURRENT_DOWNLOADS", "2"))

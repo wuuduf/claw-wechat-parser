@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from claw_wechat_parser.config import Settings
 from claw_wechat_parser.domain.message import MediaAttachment, OutboundMessage
 from claw_wechat_parser.weixin.api import WeixinApi
 from claw_wechat_parser.weixin.cdn import UploadedMedia, WeixinCdnClient
@@ -17,9 +18,14 @@ log = logging.getLogger(__name__)
 
 
 class WeixinSender:
-    def __init__(self, api: WeixinApi, cdn_base_url: str):
+    def __init__(self, api: WeixinApi, cdn_base_url: str, settings: Settings):
         self.api = api
-        self.cdn = WeixinCdnClient(api, cdn_base_url)
+        self.cdn = WeixinCdnClient(
+            api,
+            cdn_base_url,
+            upload_timeout_s=settings.cdn_upload_timeout_s,
+            upload_retries=settings.cdn_upload_retries,
+        )
 
     @staticmethod
     def _text_item(text: str) -> dict:
@@ -99,4 +105,12 @@ class WeixinSender:
         if outbound.text:
             await self.send_text(outbound.to_user_id, outbound.text, context_token=outbound.context_token)
         for media in outbound.media:
-            await self.send_media(outbound.to_user_id, media, context_token=outbound.context_token)
+            try:
+                await self.send_media(outbound.to_user_id, media, context_token=outbound.context_token)
+            except Exception as exc:
+                log.exception("媒体发送失败：path=%s error=%s", media.path, exc)
+                await self.send_text(
+                    outbound.to_user_id,
+                    f"媒体发送失败：{exc}",
+                    context_token=outbound.context_token,
+                )

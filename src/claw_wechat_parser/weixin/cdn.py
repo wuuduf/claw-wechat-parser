@@ -56,9 +56,18 @@ def build_cdn_upload_url(cdn_base_url: str, upload_param: str, filekey: str) -> 
 
 
 class WeixinCdnClient:
-    def __init__(self, api: WeixinApi, cdn_base_url: str):
+    def __init__(
+        self,
+        api: WeixinApi,
+        cdn_base_url: str,
+        *,
+        upload_timeout_s: float = 180,
+        upload_retries: int = 3,
+    ):
         self.api = api
         self.cdn_base_url = cdn_base_url
+        self.upload_timeout_s = upload_timeout_s
+        self.upload_retries = max(1, upload_retries)
 
     async def upload(
         self, path: Path, to_user_id: str, *, mime_type: str | None = None
@@ -93,16 +102,56 @@ class WeixinCdnClient:
         else:
             raise RuntimeError(f"getuploadurl 未返回上传地址：{resp}")
 
-        async with httpx.AsyncClient(timeout=60) as client:
-            upload_resp = await client.post(
-                upload_url,
-                content=ciphertext,
-                headers={"Content-Type": "application/octet-stream"},
-            )
-            upload_resp.raise_for_status()
-            download_param = upload_resp.headers.get("x-encrypted-param")
-            if not download_param:
-                raise RuntimeError("CDN 上传响应缺少 x-encrypted-param")
+        timeout = httpx.Timeout(
+            self.upload_timeout_s,
+            connect=min(30.0, self.upload_timeout_s),
+            read=self.upload_timeout_s,
+            write=self.upload_timeout_s,
+            pool=min(30.0, self.upload_timeout_s),
+        )
+        last_exc: Exception | None = None
+        log.info(
+            "CDN 上传开始：file=%s raw=%.2fMB encrypted=%.2fMB type=%s retries=%s timeout=%ss",
+            path.name,
+            raw_size / 1024 / 1024,
+            len(ciphertext) / 1024 / 1024,
+            media_type.name,
+            self.upload_retries,
+            self.upload_timeout_s,
+        )
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            for attempt in range(1, self.upload_retries + 1):
+                try:
+                    upload_resp = await client.post(
+                        upload_url,
+                        content=ciphertext,
+                        headers={"Content-Type": "application/octet-stream"},
+                    )
+                    upload_resp.raise_for_status()
+                    download_param = upload_resp.headers.get("x-encrypted-param")
+                    if not download_param:
+                        raise RuntimeError("CDN 上传响应缺少 x-encrypted-param")
+                    log.info("CDN 上传成功：file=%s attempt=%s", path.name, attempt)
+                    break
+                except (httpx.HTTPError, RuntimeError) as exc:
+                    last_exc = exc
+                    if attempt >= self.upload_retries:
+                        raise RuntimeError(
+                            f"CDN 上传失败：file={path.name} size={raw_size / 1024 / 1024:.2f}MB "
+                            f"attempts={self.upload_retries} error={exc}"
+                        ) from exc
+                    delay = min(10, 2**attempt)
+                    log.warning(
+                        "CDN 上传失败，%ss 后重试：file=%s attempt=%s/%s error=%s",
+                        delay,
+                        path.name,
+                        attempt,
+                        self.upload_retries,
+                        exc,
+                    )
+                    await asyncio.sleep(delay)
+            else:
+                raise RuntimeError(f"CDN 上传失败：{last_exc}")
 
         return UploadedMedia(
             filekey=filekey,

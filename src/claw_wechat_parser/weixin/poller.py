@@ -25,7 +25,7 @@ class WeixinPoller:
         self.token_store = ContextTokenStore(settings.state_dir)
         self.parse_service = ParseService(settings)
         self.api = WeixinApi(settings, base_url=account.base_url, token=account.token)
-        self.sender = WeixinSender(self.api, account.cdn_base_url)
+        self.sender = WeixinSender(self.api, account.cdn_base_url, settings)
         self._stop = asyncio.Event()
 
     async def close(self) -> None:
