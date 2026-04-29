@@ -25,6 +25,7 @@ class WeixinSender:
             cdn_base_url,
             upload_timeout_s=settings.cdn_upload_timeout_s,
             upload_retries=settings.cdn_upload_retries,
+            upload_proxy=settings.cdn_upload_proxy or settings.wechat_proxy,
         )
 
     @staticmethod

@@ -35,7 +35,11 @@ class WeixinApi:
 
     def __post_init__(self) -> None:
         self.base_url = (self.base_url or self.settings.api_base_url).rstrip("/")
-        self.client = httpx.AsyncClient(timeout=self.settings.api_timeout_s)
+        self.client = httpx.AsyncClient(
+            timeout=self.settings.api_timeout_s,
+            proxy=self.settings.wechat_proxy or None,
+            trust_env=True,
+        )
 
     async def close(self) -> None:
         await self.client.aclose()

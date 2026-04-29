@@ -195,6 +195,8 @@ flowchart TD
 |---|---|---|
 | `CLAW_PARSER_STATE_DIR` | `~/.claw-wechat-parser` | 状态目录 |
 | `CLAW_PARSER_API_BASE_URL` | `https://ilinkai.weixin.qq.com` | iLink API 地址 |
+| `CLAW_PARSER_WECHAT_PROXY` | 空 | 微信 iLink/API 代理；美国 VPS 上传不稳定时建议走亚洲代理 |
+| `CLAW_PARSER_CDN_UPLOAD_PROXY` | 空 | 仅微信 CDN 上传代理；为空时复用 `CLAW_PARSER_WECHAT_PROXY` |
 | `CLAW_PARSER_CDN_BASE_URL` | `https://novac2c.cdn.weixin.qq.com/c2c` | 微信 CDN 地址 |
 | `CLAW_PARSER_ILINK_BOT_TYPE` | `3` | 二维码 bot_type |
 | `CLAW_PARSER_MAX_MEDIA_SIZE_MB` | `80` | 单媒体大小限制 |

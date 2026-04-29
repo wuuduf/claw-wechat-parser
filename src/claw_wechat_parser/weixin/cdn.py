@@ -8,6 +8,7 @@ import mimetypes
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -51,6 +52,22 @@ def guess_upload_media_type(path: Path, explicit: str | None = None) -> tuple[Up
     return UploadMediaType.FILE, mime
 
 
+
+def _safe_proxy_url(proxy: str) -> str:
+    if not proxy:
+        return ""
+    try:
+        parsed = urlsplit(proxy)
+    except ValueError:
+        return "<invalid>"
+    if not parsed.username and not parsed.password:
+        return proxy
+    host = parsed.hostname or ""
+    if parsed.port:
+        host = f"{host}:{parsed.port}"
+    redacted_netloc = f"{parsed.username or 'user'}:***@{host}"
+    return urlunsplit((parsed.scheme, redacted_netloc, parsed.path, parsed.query, parsed.fragment))
+
 def build_cdn_upload_url(cdn_base_url: str, upload_param: str, filekey: str) -> str:
     return f"{cdn_base_url.rstrip('/')}/upload/{filekey}?{upload_param.lstrip('?')}"
 
@@ -63,11 +80,13 @@ class WeixinCdnClient:
         *,
         upload_timeout_s: float = 180,
         upload_retries: int = 3,
+        upload_proxy: str = "",
     ):
         self.api = api
         self.cdn_base_url = cdn_base_url
         self.upload_timeout_s = upload_timeout_s
         self.upload_retries = max(1, upload_retries)
+        self.upload_proxy = upload_proxy.strip()
 
     async def upload(
         self, path: Path, to_user_id: str, *, mime_type: str | None = None
@@ -111,15 +130,20 @@ class WeixinCdnClient:
         )
         last_exc: Exception | None = None
         log.info(
-            "CDN 上传开始：file=%s raw=%.2fMB encrypted=%.2fMB type=%s retries=%s timeout=%ss",
+            "CDN 上传开始：file=%s raw=%.2fMB encrypted=%.2fMB type=%s retries=%s timeout=%ss proxy=%s",
             path.name,
             raw_size / 1024 / 1024,
             len(ciphertext) / 1024 / 1024,
             media_type.name,
             self.upload_retries,
             self.upload_timeout_s,
+            _safe_proxy_url(self.upload_proxy) or "direct",
         )
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with httpx.AsyncClient(
+            timeout=timeout,
+            proxy=self.upload_proxy or None,
+            trust_env=True,
+        ) as client:
             for attempt in range(1, self.upload_retries + 1):
                 try:
                     upload_resp = await client.post(

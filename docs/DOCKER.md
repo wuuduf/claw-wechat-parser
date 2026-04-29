@@ -52,6 +52,27 @@ chown -R 10001:10001 data
 
 如果某个平台需要 Cookie，再填对应变量。
 
+### 美国 VPS 上传微信 CDN 不稳定
+
+如果日志里小文件也卡在 `CDN 上传开始` 后报 `ReadError`，通常是 VPS 到微信 CDN 的跨境线路问题。推荐准备一个香港/日本/新加坡的 HTTP 或 SOCKS5 代理，只代理微信 iLink/CDN：
+
+```env
+# 代理全部微信 iLink API + CDN 上传
+CLAW_PARSER_WECHAT_PROXY=http://user:pass@proxy.example.com:7890
+
+# 或者只代理 CDN 上传；为空时会复用 CLAW_PARSER_WECHAT_PROXY
+CLAW_PARSER_CDN_UPLOAD_PROXY=
+```
+
+改完后重建并重启：
+
+```bash
+docker compose up -d --build
+docker compose logs -f --tail=100
+```
+
+成功时日志会显示 `proxy=http://user:***@host:port` 和 `CDN 上传成功`。
+
 ## 4. 构建镜像
 
 ```bash
